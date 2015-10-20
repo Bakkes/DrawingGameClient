@@ -3,6 +3,7 @@ import 'CanvasMouseInput.dart';
 import 'Figure.dart';
 import 'OpCode.dart';
 import 'DrawingGameConnection.dart';
+import 'Chat.dart';
 
 class DrawingGame {
   static const int CANVAS_WIDTH = 100;
@@ -10,6 +11,7 @@ class DrawingGame {
 
 
   bool _allowDrawing = false;
+  Chat chat;
   CanvasElement canvas;
   CanvasRenderingContext2D ctx;
   DrawingGameConnection conn;
@@ -22,6 +24,8 @@ class DrawingGame {
     this._allowDrawing = true;
     this.reset();
     conn = new DrawingGameConnection(this);
+
+    this.chat = new Chat(conn);
   }
 
   void onReady() {

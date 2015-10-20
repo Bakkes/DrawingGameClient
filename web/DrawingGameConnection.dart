@@ -1,15 +1,19 @@
 import 'dart:html';
 import 'DrawingGame.dart';
 import 'dart:convert';
+import 'dart:collection';
 import 'OpCode.dart';
 import 'Figure.dart';
 import 'package:exportable/exportable.dart';
+
+typedef void OnSocketMessage(int opCode, var data);
 
 class DrawingGameConnection {
   String host = "127.0.0.1";
   int port = 4444;
   WebSocket webSocket;
   DrawingGame drawingGame;
+  HashMap<int, List<OnSocketMessage>> events;
 
   DrawingGameConnection(this.drawingGame)
   {
@@ -18,9 +22,17 @@ class DrawingGameConnection {
       host = hash.substring(1);
       print(host);
     }
+    events = new HashMap<int, List<OnSocketMessage>>();
     webSocket = new WebSocket("ws://" + host + ":" + port.toString() + "/");
     webSocket.onOpen.listen(onOpen);
     webSocket.onMessage.listen(messageReceived);
+  }
+
+  void registerEvent(int opCode, OnSocketMessage callback) {
+    if(!this.events.containsKey(opCode)) {
+      this.events[opCode] = new List<OnSocketMessage>();
+    }
+    this.events[opCode].add(callback);
   }
 
   void onOpen(event) {
@@ -46,8 +58,9 @@ class DrawingGameConnection {
   void messageReceived(MessageEvent event) {
     var data = event.data;
     var json = JSON.decode(data);
+    int opCode = json["MessageID"];
     //print(json);
-    switch(json["MessageID"]) {
+    switch(opCode) {
       case OpCode.RECV_PONG: //pong
         break;
       case OpCode.RECV_ROOM_LIST: //list of rooms
@@ -69,6 +82,12 @@ class DrawingGameConnection {
         }
         drawingGame.addFigure(figure);
         break;
+    }
+
+    if(this.events.containsKey(opCode)) {
+      for(int i = 0; i < this.events[opCode].length; i++) {
+        this.events[opCode][i](opCode, json["Data"]);
+      }
     }
   }
 
