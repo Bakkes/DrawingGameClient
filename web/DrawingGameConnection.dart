@@ -13,6 +13,11 @@ class DrawingGameConnection {
 
   DrawingGameConnection(this.drawingGame)
   {
+    String hash = window.location.hash;
+    if(hash != null && hash.length > 0) {
+      host = hash.substring(1);
+      print(host);
+    }
     webSocket = new WebSocket("ws://" + host + ":" + port.toString() + "/");
     webSocket.onOpen.listen(onOpen);
     webSocket.onMessage.listen(messageReceived);
@@ -26,7 +31,7 @@ class DrawingGameConnection {
     if(webSocket != null && webSocket.readyState == WebSocket.OPEN) {
       webSocket.send(data);
     } else {
-      Console.error("Could not send data");
+      print("Could not send data");
     }
   }
 
@@ -41,11 +46,12 @@ class DrawingGameConnection {
   void messageReceived(MessageEvent event) {
     var data = event.data;
     var json = JSON.decode(data);
-    print(json);
+    //print(json);
     switch(json["MessageID"]) {
       case OpCode.RECV_PONG: //pong
         break;
       case OpCode.RECV_ROOM_LIST: //list of rooms
+        print(json);
         break;
       case OpCode.RECV_JOIN_ROOM_RESULT: //room joined
         break;

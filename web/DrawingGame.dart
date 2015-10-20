@@ -26,6 +26,7 @@ class DrawingGame {
 
   void onReady() {
     this.reset();
+    conn.sendJSON(OpCode.SEND_LIST_ROOMS, null);
     conn.joinRoom(0);
   }
 
