@@ -1,9 +1,11 @@
 import 'DrawingGameConnection.dart';
 import 'OpCode.dart';
 import 'dart:html';
+import 'Game.dart';
 
 class MainMenu {
 
+  Game game;
   MainMenuMouseInput mouseInput;
   CanvasElement canvas;
   CanvasRenderingContext2D ctx;
@@ -11,13 +13,21 @@ class MainMenu {
   List<Button> buttons = [];
   num lastButton = 0;
 
-  MainMenu(DrawingGameConnection this.connection, CanvasElement this.canvas, CanvasRenderingContext2D this.ctx) {
+  MainMenu(DrawingGameConnection this.connection, CanvasElement this.canvas, CanvasRenderingContext2D this.ctx, this.game) {
     connection.registerEvent(OpCode.RECV_ROOM_LIST, onCommand);
+    connection.registerEvent(OpCode.RECV_JOIN_ROOM_RESULT, onCommand);
     connection.sendJSON(OpCode.SEND_LIST_ROOMS, null);
     mouseInput = new MainMenuMouseInput(this.canvas, this);
   }
 
+  void destroy() {
+    connection.unregisterEvent(OpCode.RECV_ROOM_LIST, onCommand);
+    connection.unregisterEvent(OpCode.RECV_JOIN_ROOM_RESULT, onCommand);
+    mouseInput.destroy();
+  }
+
   void onCommand(int opCode, var data) {
+    print("Command in main menu");
     switch(opCode) {
       case OpCode.RECV_ROOM_LIST:
         addButton("Create room", () => createRoom());
@@ -26,6 +36,19 @@ class MainMenu {
           addButton(room["Name"] + " [" + room["Players"].toString() + "/" + room["MaxPlayers"].toString() + "]", () => joinRoom(room["ID"]));
         }
         redraw();
+        break;
+
+      case OpCode.RECV_JOIN_ROOM_RESULT:
+        num status = data["Status"];
+        switch(status) {
+          case OpCode.STATUS_OK:
+            game.roomJoined();
+            break;
+          default:
+            print(Strings.getText(status));
+            connection.sendJSON(OpCode.SEND_LIST_ROOMS, null);
+          break;
+        }
         break;
     }
   }
@@ -77,11 +100,11 @@ class MainMenu {
   }
 
   void createRoom() {
-    alert("Not available yet");
+    print("Not available yet");
   }
 
-  void joinRoom(num id) {
-
+  void joinRoom(num roomID) {
+    connection.sendJSON(OpCode.SEND_JOIN_ROOM, {"ID": roomID});
   }
 }
 
@@ -97,11 +120,12 @@ class Button {
 
 class MainMenuMouseInput {
 
+  List<StreamSubscription> subscriptions = [];
   CanvasElement canvas;
   MainMenu mainMenu;
 
   MainMenuMouseInput(CanvasElement this.canvas, MainMenu this.mainMenu) {
-    canvas.addEventListener("mousedown", this.mouseDown);
+    subscriptions.add(canvas.onMouseDown.listen(this.mouseDown));
   }
 
   void mouseDown(MouseEvent event) {
@@ -109,6 +133,12 @@ class MainMenuMouseInput {
     num clickedIndex = mainMenu.getClickedIndex(realPoint);
     if(clickedIndex != -1) {
       mainMenu.buttonPressed(clickedIndex);
+    }
+  }
+
+  void destroy() {
+    for(int i = 0; i < subscriptions.length; i++) {
+      subscriptions[i].cancel();
     }
   }
 

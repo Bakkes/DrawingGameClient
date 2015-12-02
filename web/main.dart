@@ -3,12 +3,12 @@
 
 import 'dart:html';
 import 'Game.dart';
-
+import 'Strings.dart';
 Game game;
 
 void main() {
-  querySelector('#output').text = 'Drawing game started';
 
+  Strings.loadText();
   CanvasElement canvas = querySelector("#canvas");
   game = new Game(canvas);
 }

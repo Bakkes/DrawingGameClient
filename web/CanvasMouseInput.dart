@@ -29,6 +29,8 @@ class CanvasMouseInput {
     querySelector("#control_redo").onClick.listen(redoLastStep);
     querySelector("#control_pencil").onClick.listen(selectPencil);
     querySelector("#control_eraser").onClick.listen(selectEraser);
+    querySelector("#control_enqueue").onClick.listen(enqueue);
+    querySelector("#control_clear").onClick.listen(clear);
     //querySelector("#colorr").colorpicker().on['changeColor'].listen(colorChanged);
     //querySelector("#control_pencil").addEventListener('onclick', pencilClicked);
     //querySelector("#control_eraser").addEventListener('onclick', eraserClicked);
@@ -47,6 +49,7 @@ class CanvasMouseInput {
     canvas.removeEventListener("mousedown", this.mouseDown);
     canvas.removeEventListener("mouseup", this.mouseUp);
     canvas.removeEventListener("mouseout", this.mouseOut);
+    //add change register things?
   }
 
   void mouseMoved(MouseEvent event) {
@@ -81,7 +84,11 @@ class CanvasMouseInput {
   }
 
   void mouseOut(MouseEvent event) {
-
+    if(isMouseDown) {
+      isMouseDown = false;
+      this.game.figureSteps.addLast(currentSteps);
+      currentSteps = 0;
+    }
   }
 
   void selectPencil(MouseEvent event) {
@@ -94,6 +101,9 @@ class CanvasMouseInput {
   }
 
   void undoLastStep(MouseEvent event) {
+    if(!game.canDraw()) {
+      return;
+    }
     if(game.figureSteps.isEmpty) {
       return;
     }
@@ -102,12 +112,25 @@ class CanvasMouseInput {
   }
 
   void redoLastStep(MouseEvent event) {
+    if(!game.canDraw()) {
+      return;
+    }
     game.redo();
   }
 
-
   void colorChanged(var color) {
     currentColor = color;
+  }
+
+  void clear(MouseEvent event) {
+    if(!game.canDraw()) {
+      return;
+    }
+    game.reset();
+  }
+
+  void enqueue(MouseEvent event) {
+    game.enqueue();
   }
 
   void controlClicked(MouseEvent event) {

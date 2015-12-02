@@ -4,7 +4,7 @@ import 'CanvasMouseInput.dart';
 import 'Figure.dart';
 import 'OpCode.dart';
 import 'DrawingGameConnection.dart';
-
+import 'package:exportable/exportable.dart';
 
 class DrawingGame {
 
@@ -22,7 +22,23 @@ class DrawingGame {
   DrawingGame(this.canvas, this.ctx, this.conn) {
     this.input = new CanvasMouseInput(this.canvas, this);
     this._allowDrawing = false;
+    conn.registerEvent(OpCode.RECV_FIGURE, onMessageReceived);
+    conn.registerEvent(OpCode.RECV_UNDO, onMessageReceived);
+    conn.registerEvent(OpCode.RECV_REDO, onMessageReceived);
+    conn.registerEvent(OpCode.RECV_TURN, onMessageReceived);
+    conn.registerEvent(OpCode.RECV_RESET, onMessageReceived);
+    conn.registerEvent(OpCode.RECV_DRAW_QUEUE_INFO, onMessageReceived);
     this.reset();
+  }
+
+  void destroy() {//make something better for this
+    conn.unregisterEvent(OpCode.RECV_FIGURE, onMessageReceived);
+    conn.unregisterEvent(OpCode.RECV_UNDO, onMessageReceived);
+    conn.unregisterEvent(OpCode.RECV_REDO, onMessageReceived);
+    conn.unregisterEvent(OpCode.RECV_TURN, onMessageReceived);
+    conn.unregisterEvent(OpCode.RECV_RESET, onMessageReceived);
+    conn.unregisterEvent(OpCode.RECV_DRAW_QUEUE_INFO, onMessageReceived);
+    this.input.unregister();
   }
 
   void undoLast(int steps) {
@@ -63,8 +79,13 @@ class DrawingGame {
   }
 
   void reset() {
+    if(_allowDrawing) {
+      conn.sendJSON(OpCode.SEND_RESET, null);
+    }
     this.redoStack.clear();
     this._figures = [];
+    redoStack.clear();
+    figureSteps.clear();
     this.ctx.lineJoin = ctx.lineCap = 'round';
     this.clear();
   }
@@ -94,5 +115,50 @@ class DrawingGame {
 
   void allowInput(bool canDraw) {
     this._allowDrawing = canDraw;
+  }
+
+  void enqueue() {
+    conn.sendJSON(OpCode.SEND_ENQUEUE_DRAW_QUEUE, null);
+  }
+
+  void onMessageReceived(int opCode, var data) {
+    switch(opCode) {
+      case OpCode.RECV_FIGURE:
+        var figure;
+        switch(data["id"]) {
+          case 0: //dot
+            figure = new Exportable(Dot, data);
+            break;
+          case 1: //stroke
+            figure = new Exportable(Stroke, data);
+            break;
+        }
+        addFigure(figure);
+        break;
+      case OpCode.RECV_UNDO:
+        undoLast(data["steps"]);
+        break;
+      case OpCode.RECV_REDO:
+        redo();
+        break;
+      case OpCode.RECV_RESET:
+        reset();
+        break;
+      case OpCode.RECV_TURN:
+        allowInput(data["Turn"]);
+        break;
+      case OpCode.RECV_DRAW_QUEUE_INFO:
+        var queueHtml = querySelector("#drawingqueue");
+        String newHtml = "";
+        for(int i = 0; i < data["Queue"].length; i++) {
+          var player = data["Queue"][i];
+          newHtml += "<i>";
+          newHtml += "[" + (player["Turn"] + 1).toString() + "]" + player["Name"];
+          newHtml += "</i>\n";
+        }
+        queueHtml.innerHtml = newHtml;
+        allowInput(data["MyTurn"] == 0);
+        break;
+    }
   }
 }

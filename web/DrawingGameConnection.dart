@@ -40,6 +40,12 @@ class DrawingGameConnection {
     }
     this.events[opCode].add(callback);
   }
+  void unregisterEvent(int opCode, OnSocketMessage callback) {
+    if(!this.events.containsKey(opCode)) {
+      return;
+    }
+    print(this.events[opCode].remove(callback));
+  }
 
 
   void _send(data) {
@@ -66,36 +72,7 @@ class DrawingGameConnection {
     switch(opCode) {
       case OpCode.RECV_PONG: //pong
         break;
-      case OpCode.RECV_ROOM_LIST: //list of rooms
-        print(json);
-        break;
-      case OpCode.RECV_JOIN_ROOM_RESULT: //room joined
-        break;
       case OpCode.RECV_SAY: //chat message
-        break;
-      case OpCode.RECV_FIGURE:
-        var figure;
-        switch(json["Data"]["id"]) {
-          case 0: //dot
-            figure = new Exportable(Dot, json["Data"]);
-            break;
-          case 1: //stroke
-            figure = new Exportable(Stroke, json["Data"]);
-            break;
-        }
-        drawingGame.addFigure(figure);
-        break;
-      case OpCode.RECV_UNDO:
-        drawingGame.undoLast(json["Data"]["steps"]);
-        break;
-      case OpCode.RECV_TURN:
-        drawingGame.allowInput(json["Data"]["Turn"]);
-        break;
-      case OpCode.RECV_CLEAR:
-        drawingGame.clear();
-        break;
-      case OpCode.RECV_REDO:
-        drawingGame.redo();
         break;
     }
 

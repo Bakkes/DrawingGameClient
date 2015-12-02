@@ -20,11 +20,16 @@ class Game {
   Game(this.canvas) {
     this.ctx = canvas.getContext("2d");
     this.conn = new DrawingGameConnection(this, onReady);
-    //drawingGame.onReady(); //add this somewhere
   }
 
   void onReady(event) {
-    this.mainMenu = new MainMenu(this.conn, this.canvas, this.ctx);
+    this.mainMenu = new MainMenu(this.conn, this.canvas, this.ctx, this);
     this.chat = new Chat(conn);
+  }
+
+  void roomJoined() {
+    this.mainMenu.destroy();
+    this.mainMenu = null;
+    this.drawingGame = new DrawingGame(this.canvas,this.ctx, this.conn);
   }
 }

@@ -25,9 +25,8 @@
 
 <body>
 
-  <div id="output">
 
-  </div>
+
   <div id="drawingpanel">
       <div class="btn-group">
           <a class="btn btn-default control" href="#" id="control_pencil"><i class="fa fa-pencil"></i></a>
@@ -38,6 +37,7 @@
       <div class="btn-group">
           <a class="btn btn-default control" href="#" id="control_undo"><i class="fa fa-undo"></i></a>
           <a class="btn btn-default control" href="#" id="control_redo"><i class="fa fa-repeat"></i></a>
+          <a class="btn btn-default control" href="#" id="control_clear"><i class="fa fa-recycle"></i></a>
           <a class="input-group" id="colorr">
             <span class="input-group-addon">
                 <i>
@@ -47,6 +47,14 @@
           </a>
       </div>
 
+      <div class="btn-group">
+          <a class="btn btn-default control" href="#" id="control_enqueue"><i class="">ENQUEUE</i></a>
+          <div id="drawingqueue">
+
+          </div>
+      </div>
+        <br />
+      <br />
 
       <canvas id="canvas" width="400" height="400" style="border:1px solid black"></canvas>
   </div>
@@ -68,7 +76,10 @@
 
   <script src="js/bootstrap-colorpicker.js"></script>
 <script>
-
+window.setInterval(function() {
+  var elem = document.getElementById('chatbox');
+  elem.scrollTop = elem.scrollHeight;
+}, 200);
     $(function(){
         $('#colorr').colorpicker({customClass: 'colorp', color: "#000000"}).on('changeColor.colorpicker', function(event){
           changeColor(event.color.toHex());
