@@ -28,6 +28,16 @@ a {
     border:1px solid #ACD8F0;
 }
 
+.colorp {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+}
+
+#colorr {
+    width: 20px;
+    height: 100%;
+}
 
 #chatbox {
     text-align:left;

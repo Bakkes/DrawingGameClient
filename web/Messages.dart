@@ -1,5 +1,6 @@
 import 'package:exportable/exportable.dart';
 
+@export
 class ChatMessage extends Object with Exportable {
   @export String author;
   @export num timestamp;

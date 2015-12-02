@@ -1,12 +1,19 @@
 import 'dart:html';
+import 'dart:collection';
 import 'DrawingGame.dart';
 import 'Figure.dart';
+import 'dart:js' as js;
 
 class CanvasMouseInput {
   int lastX, lastY;
   int currentX, currentY;
+  String lastColor = "black";
   String currentColor = "black";
   int currentSize = 5;
+  String currentFigure = "line"; //pencil, line, circle
+
+  int currentSteps = 0;
+
 
   DrawingGame game;
   CanvasElement canvas;
@@ -16,6 +23,18 @@ class CanvasMouseInput {
   CanvasMouseInput(CanvasElement this.canvas, DrawingGame this.game) {
     this.width = canvas.width;
     this.height = canvas.height;
+    js.context['changeColor'] = colorChanged;//quick hack mebe
+
+    querySelector("#control_undo").onClick.listen(undoLastStep);
+    querySelector("#control_redo").onClick.listen(redoLastStep);
+    querySelector("#control_pencil").onClick.listen(selectPencil);
+    querySelector("#control_eraser").onClick.listen(selectEraser);
+    //querySelector("#colorr").colorpicker().on['changeColor'].listen(colorChanged);
+    //querySelector("#control_pencil").addEventListener('onclick', pencilClicked);
+    //querySelector("#control_eraser").addEventListener('onclick', eraserClicked);
+    /*querySelector("#control_pencil").addEventListener('onclick', pencilClicked);
+    querySelector("#control_pencil").addEventListener('onclick', pencilClicked);
+    querySelector("#control_pencil").addEventListener('onclick', pencilClicked);*/
 
     canvas.addEventListener("mousemove", this.mouseMoved);
     canvas.addEventListener("mousedown", this.mouseDown);
@@ -37,6 +56,7 @@ class CanvasMouseInput {
       this.currentX = event.client.x - canvas.offsetLeft;
       this.currentY = event.client.y - canvas.offsetTop;
       this.game.addFigure(new Stroke.Data(lastX, lastY, currentX, currentY, currentColor, currentSize));
+      currentSteps++;
     }
   }
 
@@ -51,13 +71,46 @@ class CanvasMouseInput {
     this.currentX = event.client.x - canvas.offsetLeft;
     this.currentY = event.client.y - canvas.offsetTop;
     this.game.addFigure(new Dot.Data(currentX - (currentSize / 2).round(), currentY - (currentSize / 2).round(), currentColor, currentSize));
+    currentSteps++;
   }
 
   void mouseUp(MouseEvent event) {
     isMouseDown = false;
+    this.game.figureSteps.addLast(currentSteps);
+    currentSteps = 0;
   }
 
   void mouseOut(MouseEvent event) {
 
+  }
+
+  void selectPencil(MouseEvent event) {
+    currentColor = lastColor;
+  }
+
+  void selectEraser(MouseEvent event) {
+    lastColor = currentColor;
+    currentColor = "white";
+  }
+
+  void undoLastStep(MouseEvent event) {
+    if(game.figureSteps.isEmpty) {
+      return;
+    }
+    int last = game.figureSteps.removeLast();
+    this.game.undoLast(last);
+  }
+
+  void redoLastStep(MouseEvent event) {
+    game.redo();
+  }
+
+
+  void colorChanged(var color) {
+    currentColor = color;
+  }
+
+  void controlClicked(MouseEvent event) {
+    //switch(event.)
   }
 }

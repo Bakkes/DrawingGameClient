@@ -5,6 +5,7 @@ abstract class Figure {
   void draw(CanvasRenderingContext2D ctx);
 }
 
+@export
 class Dot extends Object with Exportable implements Figure {
   @export int id = 0;
   @export int x;
@@ -25,6 +26,7 @@ class Dot extends Object with Exportable implements Figure {
   }
 }
 
+@export
 class Stroke extends Object with Exportable implements Figure {
   @export int id = 1;
   @export int startX;
@@ -49,3 +51,13 @@ class Stroke extends Object with Exportable implements Figure {
   }
 }
 
+class FigureFactory {
+  static Figure CreateFigure(String figureName, int startX, int startY, int endX, int endY, int color, int size) {
+    switch(figureName) {
+      case "line":
+        break;
+
+    }
+  }
+
+}

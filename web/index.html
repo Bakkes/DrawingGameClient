@@ -15,6 +15,12 @@
     <link rel="stylesheet" href="styles.css">
     <script async src="main.dart" type="application/dart"></script>
     <script async src="packages/browser/dart.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <link href="css/bootstrap-colorpicker.min.css" rel="stylesheet">
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
 </head>
 
 <body>
@@ -22,7 +28,29 @@
   <div id="output">
 
   </div>
-  <canvas id="canvas" width="400" height="400" style="border:1px solid black"></canvas>
+  <div id="drawingpanel">
+      <div class="btn-group">
+          <a class="btn btn-default control" href="#" id="control_pencil"><i class="fa fa-pencil"></i></a>
+          <a class="btn btn-default control" href="#" id="control_line"><i class="fa fa-arrows-h"></i></a>
+          <a class="btn btn-default control" href="#" id="control_eraser"><i class="fa fa-eraser"></i></a>
+      </div>
+
+      <div class="btn-group">
+          <a class="btn btn-default control" href="#" id="control_undo"><i class="fa fa-undo"></i></a>
+          <a class="btn btn-default control" href="#" id="control_redo"><i class="fa fa-repeat"></i></a>
+          <a class="input-group" id="colorr">
+            <span class="input-group-addon">
+                <i>
+
+                </i>
+            </span>
+          </a>
+      </div>
+
+
+      <canvas id="canvas" width="400" height="400" style="border:1px solid black"></canvas>
+  </div>
+
 
   <div id ="chatwrapper">
     <div id="chatbox">
@@ -33,5 +61,19 @@
         <input name="chatsubmit" type="submit" id="chatsubmit" value="Send">
     </form>
   </div>
+  <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+  <script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+  <!-- Latest compiled and minified JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
+  <script src="js/bootstrap-colorpicker.js"></script>
+<script>
+
+    $(function(){
+        $('#colorr').colorpicker({customClass: 'colorp', color: "#000000"}).on('changeColor.colorpicker', function(event){
+          changeColor(event.color.toHex());
+        });
+    });
+</script>
 </body>
 </html>

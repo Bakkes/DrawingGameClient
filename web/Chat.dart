@@ -39,9 +39,7 @@ class Chat {
   {
     if(opCode == OpCode.RECV_SAY)
     {
-      print(json);
       var msg = new Exportable(ChatMessage, json);//new ChatMessage()..initFromJson(json);
-      print(msg);
       addMessage(msg);
     }
   }

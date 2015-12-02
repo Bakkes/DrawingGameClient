@@ -1,31 +1,59 @@
 import 'dart:html';
+import 'dart:collection';
 import 'CanvasMouseInput.dart';
 import 'Figure.dart';
 import 'OpCode.dart';
 import 'DrawingGameConnection.dart';
-import 'Chat.dart';
+
 
 class DrawingGame {
-  static const int CANVAS_WIDTH = 100;
-  static const int CANVAS_HEIGHT = 100;
 
 
   bool _allowDrawing = false;
-  Chat chat;
+
   CanvasElement canvas;
   CanvasRenderingContext2D ctx;
   DrawingGameConnection conn;
   CanvasMouseInput input;
   List<Figure> _figures = [];
+  Queue<int> figureSteps = new Queue<int>();
+  Queue<List<Figure>> redoStack = new Queue<List<Figure>>();
 
-  DrawingGame(this.canvas) {
-    this.ctx = canvas.getContext("2d");
+  DrawingGame(this.canvas, this.ctx, this.conn) {
     this.input = new CanvasMouseInput(this.canvas, this);
-    this._allowDrawing = true;
+    this._allowDrawing = false;
     this.reset();
-    conn = new DrawingGameConnection(this);
+  }
 
-    this.chat = new Chat(conn);
+  void undoLast(int steps) {
+    if(steps >= _figures.length) { //prevent malicious packets where steps > length of figures
+      redoStack.add(_figures);
+      _figures = [];
+    } else {
+      var listt = _figures.getRange(_figures.length - steps, _figures.length).toList();
+      redoStack.addLast(listt);
+      _figures.removeRange(_figures.length - steps, _figures.length);
+    }
+    if(_allowDrawing) {
+      conn.sendJSON(OpCode.SEND_UNDO, {"steps": steps});
+    }
+
+    this.redraw();
+  }
+
+  void redo() {
+    if(redoStack.isEmpty) {
+      return;
+    }
+
+    List<Figure> redoFigures = redoStack.removeLast();
+    _figures.addAll(redoFigures);
+    figureSteps.addLast(redoFigures.length);
+    redraw();
+
+    if(_allowDrawing) {
+      conn.sendJSON(OpCode.SEND_REDO, null);
+    }
   }
 
   void onReady() {
@@ -35,6 +63,7 @@ class DrawingGame {
   }
 
   void reset() {
+    this.redoStack.clear();
     this._figures = [];
     this.ctx.lineJoin = ctx.lineCap = 'round';
     this.clear();
@@ -58,6 +87,7 @@ class DrawingGame {
     if(_allowDrawing) {
       conn.send(OpCode.SEND_FIGURE, figure);
     }
+    redoStack.clear();
   }
 
   bool canDraw() => this._allowDrawing;

@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:collection';
 import 'OpCode.dart';
 import 'Figure.dart';
+import 'Game.dart';
 import 'package:exportable/exportable.dart';
 
 typedef void OnSocketMessage(int opCode, var data);
@@ -13,19 +14,24 @@ class DrawingGameConnection {
   int port = 4444;
   WebSocket webSocket;
   DrawingGame drawingGame;
+  Game game;
   HashMap<int, List<OnSocketMessage>> events;
 
-  DrawingGameConnection(this.drawingGame)
+  DrawingGameConnection(this.game, [openCB(event)])
   {
     String hash = window.location.hash;
-    if(hash != null && hash.length > 0) {
+    if(hash != null && hash.length > 0) { //debugging purposes only, might even be XSS injectable?
       host = hash.substring(1);
       print(host);
     }
     events = new HashMap<int, List<OnSocketMessage>>();
     webSocket = new WebSocket("ws://" + host + ":" + port.toString() + "/");
-    webSocket.onOpen.listen(onOpen);
+    webSocket.onOpen.listen(openCB);
     webSocket.onMessage.listen(messageReceived);
+  }
+
+  void setDrawingGame(DrawingGame drawingGame) {
+    this.drawingGame = drawingGame;
   }
 
   void registerEvent(int opCode, OnSocketMessage callback) {
@@ -35,9 +41,6 @@ class DrawingGameConnection {
     this.events[opCode].add(callback);
   }
 
-  void onOpen(event) {
-    drawingGame.onReady();
-  }
 
   void _send(data) {
     if(webSocket != null && webSocket.readyState == WebSocket.OPEN) {
@@ -81,6 +84,18 @@ class DrawingGameConnection {
             break;
         }
         drawingGame.addFigure(figure);
+        break;
+      case OpCode.RECV_UNDO:
+        drawingGame.undoLast(json["Data"]["steps"]);
+        break;
+      case OpCode.RECV_TURN:
+        drawingGame.allowInput(json["Data"]["Turn"]);
+        break;
+      case OpCode.RECV_CLEAR:
+        drawingGame.clear();
+        break;
+      case OpCode.RECV_REDO:
+        drawingGame.redo();
         break;
     }
 
